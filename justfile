@@ -86,9 +86,9 @@ qtest +ARGS="":
 @commit MESSAGE: committable
     git commit -m "{{MESSAGE}}"
 
-# execute benchmarks tests only, in benchmark mode
-@benchmarks:
-    pytest --benchmark-enable --benchmark-only
+# execute benchmarks tests only, in benchmark mode.
+@benchmarks K_SELECTOR="test":
+    pytest --benchmark-enable --benchmark-only -k {{K_SELECTOR}}
 
 # bootstrap documentation
 @_setup-doc:
