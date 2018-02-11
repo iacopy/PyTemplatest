@@ -85,6 +85,7 @@ qtest +ARGS="":
 # git commit if your code is committable
 @commit MESSAGE: committable
     git commit -m "{{MESSAGE}}"
+    just clean
 
 # execute benchmarks tests only, in benchmark mode.
 @benchmarks K_SELECTOR="test":
@@ -117,10 +118,9 @@ qtest +ARGS="":
 
 # remove artifacts (pyc, __pycache__, coverage stuff, built docs)
 cleanup:
-    find . -type d -name __pycache__ | xargs rm -rfv
     rm -rf htmlcov
     coverage erase
-
+    rm -rf build
     # cleanup built documentation
     rm -rf {{DOC_DIRNAME}}/build
 
@@ -130,6 +130,13 @@ cleanup:
     rm -rf .hypothesis
     rm -rf .mypy_cache
     rm -rf .pytest_cache
+    find . -type d -name __pycache__ | xargs rm -rfv
+
+# remove untracked artifacts (git clean -fdx)
+clean:
+    # NB: after this, you will need to recompile cython files
+    # (\"python setup.py install\" or \"just compile\")
+    git clean -fdx
 
 # shortcut to exit with a message and error exit code
 @_exit MESSAGE:
