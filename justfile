@@ -71,21 +71,29 @@ qtest +ARGS="":
     just check-coverage
     echo Quality check OK!
 
+# ensure that working tree is clean
+@_working-tree-clean:
+    python src/git_status.py clean || just _fail "Your working tree is not clean."
+
 # ensure that git repo is clean for commit
 # (contains only stuff in the index, not in the worktree)
-@_worktree_clean:
-    python src/git_status.py index || just _fail "Your worktree is not clean or you don\'t have changes to commit."
+@_index-only:
+    python src/git_status.py index || just _fail "Your working tree is not clean or you don\'t have changes to commit."
     echo git-staged files and clean worktree.
 
 # require quality and no garbage in the repo worktree
-@committable: _worktree_clean
+@committable: _index-only
     just qa
     echo Your code seems committable.
 
-# git commit if your code is committable
+# git commit (only if your code is committable)
 @commit MESSAGE: committable
     git commit -m "{{MESSAGE}}"
     just clean
+
+# check and git push if everything is OK
+@push: _working-tree-clean qa clean
+    git push
 
 # execute benchmarks tests only, in benchmark mode.
 @benchmarks K_SELECTOR="test":
