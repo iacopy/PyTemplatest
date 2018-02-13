@@ -12,3 +12,4 @@ before_install:
 
 script:
   - just qa
+  - just benchmarks
