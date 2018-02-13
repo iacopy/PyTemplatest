@@ -95,7 +95,7 @@ Run benchmarks (you have to write down them before :) )::
 
 Remove build artifacts::
 
-    just cleanup
+    just clean
 
 
 Just integrated tools
