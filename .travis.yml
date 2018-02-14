@@ -2,16 +2,11 @@
 
 language: python
 python:
+  - "2,7"
   - "3.6"
 
-before_install:
-  # install Just
-  - curl https://sh.rustup.rs -sSf | sh -s -- -y
-  - export PATH="$HOME/.cargo/bin:$PATH"
-  - cargo install just
-
 script:
-  - just qa
-  - just benchmarks
   - python --version
   - python -m pip freeze
+  - python src/main.py
+
