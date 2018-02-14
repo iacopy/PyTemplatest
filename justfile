@@ -39,7 +39,7 @@ setup VIRTUALENV:
     pylint src
     echo "pylint: OK"
     # Auto-fix imports with isort -> worktree become unclean if needed
-    isort **/*.py -c || just _fail "fix python imports by running \'just isort\'"
+    isort ./**/*.py -c || just _fail "fix python imports by running \'just isort\'"
     echo "isort : OK"
 
 # auto fix imports and pep8 coding style

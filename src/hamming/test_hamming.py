@@ -10,6 +10,8 @@ from functools import partial
 # 3rd party
 import numpy as np
 import pytest
+
+# My stuff
 from hamming.hamming import calculate
 from hamming.hamming import calculate_c_style
 from hamming.hamming import calculate_np_array

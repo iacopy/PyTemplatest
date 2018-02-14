@@ -13,3 +13,5 @@ before_install:
 script:
   - just qa
   - just benchmarks
+  - python --version
+  - python -m pip freeze
