@@ -37,7 +37,7 @@ def random_puzzle(ary, cell_size, swaps):
     for i in range(swaps):
         src_cell = rand_cell(subdivided_shape)
         dst_cell = rand_cell(subdivided_shape)
-        swap(ary, cell_size, src_cell, dst_cell)
+        swap(ary, cell_size, (src_cell, dst_cell))
 
         assert ary.sum() == initial_sum, \
             'Checksum failed after {} swaps! {} -> {}'.format(

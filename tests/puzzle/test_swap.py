@@ -34,13 +34,13 @@ def test_simple_swap(initial, intermediate, final):
     """
     ary = np.array(initial)
 
-    puzzle.swap(ary, 2, (0, 0), (0, 1))
+    puzzle.swap(ary, 2, ((0, 0), (0, 1)))
 
     # I'm using array.tolist for the comparison instead of np.array_equal
     # to better visualize in case of fail
     assert ary.tolist() == intermediate
 
-    puzzle.swap(ary, 2, (0, 1), (1, 1))
+    puzzle.swap(ary, 2, ((0, 1), (1, 1)))
 
     assert ary.tolist() == final
 
@@ -103,8 +103,8 @@ def test_double_swap(case):
     src_cell = case['src_cell']
     dst_cell = case['dst_cell']
 
-    puzzle.swap(ary, cell_size, src_cell, dst_cell)
-    puzzle.swap(ary, cell_size, src_cell, dst_cell)
+    puzzle.swap(ary, cell_size, (src_cell, dst_cell))
+    puzzle.swap(ary, cell_size, (src_cell, dst_cell))
 
     assert np.array_equal(ary, initial_array)
 
@@ -129,9 +129,9 @@ def test_one_sized_cell_double_swap(ary, src_cell, dst_cell):
     initial_array = ary.copy()
 
     # The first swap MUST give a different array
-    puzzle.swap(ary, 1, src_cell, dst_cell)
+    puzzle.swap(ary, 1, (src_cell, dst_cell))
     assert not np.array_equal(ary, initial_array)
 
     # The second swap must give the initial array
-    puzzle.swap(ary, 1, src_cell, dst_cell)
+    puzzle.swap(ary, 1, (src_cell, dst_cell))
     assert np.array_equal(ary, initial_array)
