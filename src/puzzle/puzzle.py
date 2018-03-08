@@ -24,3 +24,12 @@ def swap(ary, size, cell_0, cell_1):
             tmp = copy(ary[y_0][x_0])
             ary[y_0][x_0] = ary[y_1][x_1]
             ary[y_1][x_1] = tmp
+
+
+def swap_size_one(ary, index_0, index_1):
+    """
+    Swap ``ary`` items at ``index_0`` and ``index_1``.
+    """
+    tmp = copy(ary[index_0])
+    ary[index_0] = ary[index_1]
+    ary[index_1] = tmp
