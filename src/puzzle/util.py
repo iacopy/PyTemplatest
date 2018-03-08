@@ -29,4 +29,4 @@ def save_image(ary, dst):
     """
     Save an `ary` numpy array image to disk in `dst` file path.
     """
-    Image.fromarray(ary).save(dst)
+    Image.fromarray(ary.astype(np.uint8)).save(dst)
