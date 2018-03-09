@@ -5,7 +5,10 @@ The final result is not guaranteed to be equal to the target
 but similar due to immutable pixel values.
 """
 import os
+import pickle
 import sys
+
+from time import time as get_time
 
 import numpy as np
 
@@ -14,6 +17,11 @@ from . import rand_puzzle
 from ..animation import animation
 from .util import load_image_as_grayscale
 from .util import save_image
+
+
+from collections import namedtuple
+
+Bbox = namedtuple('bbox', ['min_row', 'min_col', 'max_row', 'max_col'])
 
 
 def square_diff_sum(ary_1, ary_2):
@@ -33,24 +41,31 @@ def rand_swap_cells(ary, bbox=None):
     Return a random couple of cells within the shape.
     """
     if bbox is None:
-        bbox = dict(min_height=0, min_width=0, max_height=ary.shape[0], max_width=ary.shape[1])
-    row_0 = np.random.randint(bbox['min_row'], bbox['max_row'])
-    col_0 = np.random.randint(bbox['min_col'], bbox['max_col'])
+        bbox = Bbox(min_row=0, min_col=0, max_row=ary.shape[0], max_col=ary.shape[1])
+
+    row_0 = np.random.randint(bbox.min_row, bbox.max_row)
+    col_0 = np.random.randint(bbox.min_col, bbox.max_col)
     cell_0 = row_0, col_0
     # optimize
     choices = [(row_0 + i, col_0 + j) for i in range(-1, 2) for j in range(-1, 2)]
     while True:
         cell_1 = choices.pop(np.random.randint(len(choices)))
-        if (cell_1 != cell_0) and (0 <= cell_1[0] < bbox['max_row'] and 0 <= cell_1[1] < bbox['max_col']):
+        if (cell_1 != cell_0) and (0 <= cell_1[0] < bbox.max_row and 0 <= cell_1[1] < bbox.max_col):
             return (row_0, col_0), cell_1
 
 
-def explore(target, ary, size, best_diff, n_trials):
+
+def explore(target, ary, best_diff, bbox=None, sub_trials=1000):
+    def expand_bbox(bbox):
+        height, width = ary.shape
+        return Bbox(
+            min_row=max(0, bbox.min_row - 1),
+            min_col=max(0, bbox.min_col - 1),
+            max_row=min(height, bbox.max_row + 1),
+            max_col=min(width, bbox.max_col + 1),
+        )
     #print('explore\n', ary, 'to\n', target)
     swap = puzzle.swap_size_one
-    bbox = dict(min_row=0, min_col=0, max_row=target.shape[0] - 1, max_col=target.shape[1] - 1)
-
-    cells_list = [((1, 1), (2, 1)), ((0, 0), (1, 0)), ((1, 0), (2, 0)), ((2, 0), (2, 1))]
 
     best_ary = ary.copy()
     trials_steps = []
@@ -60,7 +75,7 @@ def explore(target, ary, size, best_diff, n_trials):
     cell_0, cell_1 = rand_swap_cells(ary, bbox)
     cell_diff_0 = diff_cells(target, ary, cell_0, cell_1)
 
-    for i in range(n_trials):
+    for i in range(sub_trials):
         swap(ary, cell_0, cell_1)
         cell_diff_1 = (target[cell_0] - ary[cell_0]) ** 2 + (target[cell_1] - ary[cell_1]) ** 2
         diff = square_diff_sum(target, ary)
@@ -69,6 +84,9 @@ def explore(target, ary, size, best_diff, n_trials):
             best_diff = diff
             trials_steps_pointer = len(trials_steps)
             best_ary = ary.copy()
+        else:
+            # enlarge search bbox
+            bbox = expand_bbox(bbox)
 
         if best_diff == 0:
             break
@@ -89,10 +107,19 @@ def save_steps(steps):
         fp.write(tow)
 
 
-def search_morph_steps(ary, target, n_trials, step=10):
+def get_bbox(cells):
+    tmp = np.array(cells)
+    return Bbox(*np.array([tmp.min(0), tmp.max(0) + 1]).flatten().tolist())
+
+
+def search_morph_steps(ary, target, super_trials=1000, sub_trials=100, step=10):
     """
     Try to morph ``ary`` image into ``target`` one, just swapping pixels.
     """
+    def steps2bbox(new_steps):
+        if new_steps:
+            return get_bbox(new_steps[-1])
+        return Bbox(0, 0, target.shape[0] - 1, target.shape[1] - 1)
 
     # checksum
     source_sum = ary.sum()
@@ -107,10 +134,14 @@ def search_morph_steps(ary, target, n_trials, step=10):
 
     size = 1
     n_steps = 0
+    new_steps = []
+    t0 = get_time()
     try:
         while True:
-            for i in range(1000):
-                ary, new_steps, new_diff = explore(target, ary.copy(), size, best_diff, n_trials)
+            # start exploration from last step
+            bbox = steps2bbox(new_steps)
+            for i in range(super_trials):
+                ary, new_steps, new_diff = explore(target, ary.copy(), best_diff, bbox, sub_trials)
                 assert new_diff <= best_diff, '{} !<= {}'.format(new_diff, best_diff)
                 best_diff = new_diff
                 if new_steps:
@@ -124,6 +155,7 @@ def search_morph_steps(ary, target, n_trials, step=10):
                     print('{:,} total steps saved'.format(n_steps))
                     save_image(ary, 'current_best.png')
                     print('Current best image updated')
+                    print('{:.2f} steps / s'.format(n_steps / (get_time() - t0)))
                 if best_diff == 0:
                     print('TOP')
                     break
@@ -148,6 +180,23 @@ def apply_morphing_steps(ary, steps, n_frames=3600):
             j = 0
 
 
+def save_animation(starter, steps_file):
+    """
+    Save a dict with keys 'source' and 'steps' in a file
+    """
+    cells = []
+    with open(steps_file) as fp:
+        for line in fp:
+            cell_0_row, cell_0_col, cell_1_row, cell_1_col = tuple(map(int, line.split('\t')))
+            cell_0 = cell_0_row, cell_0_col
+            cell_1 = cell_1_row, cell_1_col
+            cells.append((cell_0, cell_1))
+    to_save = dict(starter=starter.tolist(), cells=cells)
+    with open('anim_data.pkl', 'wb') as fp:
+        pickle.dump(to_save, fp)
+
+
+
 def main(target, source=None, dst='video.mp4'):
     try:
         os.remove('steps.csv')
@@ -163,18 +212,21 @@ def main(target, source=None, dst='video.mp4'):
         source = target.copy().flatten()
         source.sort()
         source = source.reshape(target.shape)
-        # n_swaps = np.prod(target.shape) * 2
-        # print('swapping target {} ({:,} swaps)...'.format(target.shape, n_swaps))
-        # rand_puzzle.random_puzzle(source, 1, n_swaps)
+        n_swaps = np.prod(target.shape) * 2
+        print('swapping target {} ({:,} swaps)...'.format(target.shape, n_swaps))
+        rand_puzzle.random_puzzle(source, 1, n_swaps)
+    else:
+        source = load_image_as_grayscale(source).astype(np.int32)
 
     starter = source.copy()
     save_image(starter, 'starter.png')
 
     print('Finding steps...')
-    ary = search_morph_steps(source.copy(), target.copy(), 1000)
-    print('Completed')
+    ary = search_morph_steps(source.copy(), target.copy(), super_trials=1000, sub_trials=200)
 
+    print('Saving things')
     save_image(ary, 'final_array.png')
+    save_animation(starter, 'steps.csv')
 
 
 if __name__ == '__main__':
