@@ -4,6 +4,7 @@ Morph a source image in a target one, just swapping pixels.
 The final result is not guaranteed to be equal to the target
 but similar due to immutable pixel values.
 """
+# Standard Library
 import os
 import pickle
 import sys
@@ -11,9 +12,11 @@ from collections import namedtuple
 from random import choice
 from time import time as get_time
 
+# 3rd party
 import numpy as np
 
-from animation import animation
+# My stuff
+from ..animation import animation
 from . import puzzle
 from . import rand_puzzle
 from .util import load_image_as_grayscale

@@ -1,13 +1,15 @@
 """
 Animation example.
 """
+# Standard Library
 import os
 
 # 3rd party
 import numpy as np
 from imageio import mimwrite
 
-from puzzle.util import save_image
+# My stuff
+from ..puzzle.util import save_image
 
 
 def save_frames_images(frames, dst_dir='.'):

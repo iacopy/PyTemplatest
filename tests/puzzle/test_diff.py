@@ -1,16 +1,16 @@
 """
 Test image diff soluzions.
 """
+# 3rd party
 import numpy as np
-
 import pytest
-
-from puzzle import puzzle
 from hypothesis import assume
 from hypothesis import given
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 
+# My stuff
+from puzzle import puzzle
 
 SEED = 123456
 

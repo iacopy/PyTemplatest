@@ -1,15 +1,14 @@
 # 3rd party
 import numpy as np
 import pytest
-
-# My stuff
-from puzzle import morphing
-import animation
-
 from hypothesis import assume
 from hypothesis import given
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
+
+# My stuff
+import animation
+from puzzle import morphing
 
 
 @pytest.mark.parametrize('first,second,expected', [
