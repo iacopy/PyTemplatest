@@ -80,7 +80,8 @@ def explain_errors(query, git_status):
                 error_lines.append('\t' + file_path)
             error_lines.append('HINT: git add -u  # stage modified files')
             error_lines.append('HINT: git add --all  # stage everything')
-            error_lines.append('HINT: just clean #  remove (!) nontracked files')
+            error_lines.append(
+                'HINT: just clean #  remove (!) nontracked files')
         if not git_status.get('index'):
             error_lines.append('ERROR: there are no files in the index.')
             if worktree_files:
